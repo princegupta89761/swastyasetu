@@ -1,0 +1,5 @@
+{
+  "name": "SwasthyaSetu (स्वास्थ्यसेतु)",
+  "description": "Bridging You to Better Health - A modern healthcare platform for early disease detection, health guidance, and emergency response.",
+  "requestFramePermissions": ["geolocation"]
+}

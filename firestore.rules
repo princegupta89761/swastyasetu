@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string
+    //   - email: string (required)
+    //   - age: number
+    //   - gender: string
+    //   - bloodGroup: string
+    //   - medicalHistory: string
+    //   - allergies: string
+    //   - createdAt: timestamp
+    //
+    // Collection: records
+    // Document ID: {recordId}
+    // Fields:
+    //   - uid: string (required)
+    //   - title: string (required)
+    //   - type: string
+    //   - date: string
+    //   - description: string
+    //   - fileUrl: string
+    //   - createdAt: timestamp
+    //
+    // Collection: symptoms
+    // Document ID: {logId}
+    // Fields:
+    //   - uid: string (required)
+    //   - symptoms: list (required)
+    //   - severity: number
+    //   - notes: string
+    //   - timestamp: timestamp (required)
+    //   - riskLevel: string
+    //
+    // Collection: alerts
+    // Document ID: {alertId}
+    // Fields:
+    //   - uid: string (required)
+    //   - location: map
+    //   - timestamp: timestamp (required)
+    //   - status: string
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidRecord(data) {
+      return data.keys().hasAll(['uid', 'title', 'date']) &&
+             data.uid == request.auth.uid &&
+             data.title is string && data.title.size() < 200;
+    }
+
+    function isValidSymptom(data) {
+      return data.keys().hasAll(['uid', 'symptoms', 'timestamp']) &&
+             data.uid == request.auth.uid &&
+             data.symptoms is list &&
+             data.timestamp is timestamp;
+    }
+
+    function isValidAlert(data) {
+      return data.keys().hasAll(['uid', 'timestamp']) &&
+             data.uid == request.auth.uid &&
+             data.timestamp is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+
+    match /records/{recordId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidRecord(request.resource.data);
+      allow update: if isDocOwner() && isValidRecord(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /symptoms/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidSymptom(request.resource.data);
+      allow update: if isDocOwner() && isValidSymptom(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /alerts/{alertId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidAlert(request.resource.data);
+      allow update: if isDocOwner() && isValidAlert(request.resource.data);
+    }
+  }
+}

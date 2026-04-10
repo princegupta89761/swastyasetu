@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user health profile and basic information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "age": { "type": "number" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "bloodGroup": { "type": "string" },
+        "medicalHistory": { "type": "string" },
+        "allergies": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "HealthRecord": {
+      "title": "Health Record",
+      "description": "Medical documents and records uploaded by user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["report", "prescription", "bill", "other"] },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "title", "date"]
+    },
+    "SymptomLog": {
+      "title": "Symptom Log",
+      "description": "Daily or periodic symptom tracking for the health timeline",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "symptoms": { "type": "array", "items": { "type": "string" } },
+        "severity": { "type": "number", "description": "1-10 scale" },
+        "notes": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] }
+      },
+      "required": ["uid", "symptoms", "timestamp"]
+    },
+    "EmergencyAlert": {
+      "title": "Emergency Alert",
+      "description": "Logs of SOS alerts triggered by the user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "resolved"] }
+      },
+      "required": ["uid", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/records/{recordId}": {
+      "schema": "HealthRecord",
+      "description": "Medical records collection"
+    },
+    "/symptoms/{logId}": {
+      "schema": "SymptomLog",
+      "description": "Symptom tracking logs"
+    },
+    "/alerts/{alertId}": {
+      "schema": "EmergencyAlert",
+      "description": "Emergency SOS alerts"
+    }
+  }
+}
